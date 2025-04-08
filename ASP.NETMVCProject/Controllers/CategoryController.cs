@@ -52,13 +52,23 @@ namespace ASP.NETMVCProject.Controllers
 
         public IActionResult Delete(int id)
         {
-            var category = _context.Categories.Find(id);
-            _context.Categories.Remove(category);
-            _context.SaveChanges();
+            var category = _context.Categories
+                .Include(c => c.Products)
+                .FirstOrDefault(c => c.CategoryId == id);
 
-            TempData["success"] = "Category deleted successfully";
+            if (category != null)
+            {
+                // If cascade delete is set in OnModelCreating, this step is NOT needed
+                //_context.Products.RemoveRange(category.Products);
+
+                _context.Categories.Remove(category);
+                _context.SaveChanges();
+                TempData["success"] = "Cetegory Related All Records Deleted successfully";
+            }
+
             return RedirectToAction("Index");
         }
+
     }
 }
 

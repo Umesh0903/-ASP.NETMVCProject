@@ -1,5 +1,7 @@
 using Microsoft.EntityFrameworkCore;
 using ASP.NETMVCProject.Data;
+using ASP.NETMVCProject.Services.Interfaces;
+using ASP.NETMVCProject.Services;
 
 namespace ASP.NETMVCProject
 {
@@ -7,13 +9,19 @@ namespace ASP.NETMVCProject
     {
         public static void Main(string[] args)
         {
-            var builder = WebApplication.CreateBuilder(args);
 
+            var builder = WebApplication.CreateBuilder(args);
             // Add services to the container.
+
             builder.Services.AddControllersWithViews();
+
+            builder.Services.AddScoped<IProductService, ProductService>();
+            builder.Services.AddScoped<ICategoryService, CategoryService>();
 
             builder.Services.AddDbContext<ApplicationDbContext>(options
                 => options.UseSqlServer(builder.Configuration.GetConnectionString("MyConnection")));
+
+
 
             var app = builder.Build();
 

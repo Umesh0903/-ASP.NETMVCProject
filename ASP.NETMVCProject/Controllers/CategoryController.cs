@@ -1,76 +1,59 @@
-using Microsoft.AspNetCore.Mvc;
-using Microsoft.Identity.Client;
-using ASP.NETMVCProject.Data;
 using ASP.NETMVCProject.Models;
-using System;
-using Microsoft.EntityFrameworkCore;
+using ASP.NETMVCProject.Services.Interfaces;
+using Microsoft.AspNetCore.Mvc;
 
 namespace ASP.NETMVCProject.Controllers
 {
     public class CategoryController : Controller
     {
-        private readonly ApplicationDbContext _context;
+        private readonly ICategoryService _categoryService;
 
-        public CategoryController(ApplicationDbContext context)
+        public CategoryController(ICategoryService categoryService)
         {
-            _context = context;
+            _categoryService = categoryService;
         }
 
-        public IActionResult Index() => View(_context.Categories.ToList());
+        public IActionResult Index()
+        {
+            var categories = _categoryService.GetAll();
+            return View(categories);
+        }
 
         public IActionResult Create() => View();
 
         [HttpPost]
-        
         public IActionResult Create(Category category)
         {
-            
-                _context.Categories.Add(category);
-                _context.SaveChanges();
-
-            TempData["success"] = "Category Created successfully";
-            return RedirectToAction("Index");
-            
-
+                _categoryService.Create(category);
+                TempData["success"] = "Category Created successfully";
+                return RedirectToAction("Index");
         }
 
         public IActionResult Edit(int id)
         {
-            var category = _context.Categories.Find(id);
+            var category = _categoryService.GetCategoryById(id);
+            if (category == null)
+            {
+                return NotFound();
+            }
             return View(category);
         }
 
         [HttpPost]
+        [ValidateAntiForgeryToken]
         public IActionResult Edit(Category category)
         {
-            _context.Categories.Update(category);
-            _context.SaveChanges();
-            TempData["success"] = "Category Updated successfully";
-
-            return RedirectToAction("Index");
+                _categoryService.Update(category);
+                TempData["success"] = "Category updated successfully";
+                return RedirectToAction("Index");
         }
+
 
         public IActionResult Delete(int id)
         {
-            var category = _context.Categories
-                .Include(c => c.Products)
-                .FirstOrDefault(c => c.CategoryId == id);
-
-            if (category != null)
-            {
-                // If cascade delete is set in OnModelCreating, this step is NOT needed
-                //_context.Products.RemoveRange(category.Products);
-
-                _context.Categories.Remove(category);
-                _context.SaveChanges();
-                TempData["success"] = "Cetegory Related All Records Deleted successfully";
-            }
-
+            _categoryService.Delete(id);
+            TempData["success"] = "Category and related products deleted successfully";
             return RedirectToAction("Index");
         }
-
     }
 }
-
-
-
